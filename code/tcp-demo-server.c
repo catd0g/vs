@@ -65,22 +65,39 @@ int main(int argc, char **argv)
                 printf("New connection from %s\n",
                        inet_ntoa(client_addr.sin_addr));
 
-                // Create message to send
-                time_t t = time(NULL);
-                char *msg = ctime(&t);
-                int msglen = strlen(msg) + 1;
+
                 int ret;
                 for (;;){
-                  
+                  // Maximum size of incoming message
+                  int msglen = 100;
+
+                  // Buffer for incoming message
+                  char buf[msglen + 1];   // One more to ensure that there is a trailing NULL char.
+                  memset(buf, 0, msglen + 1);
+                  ret = read(client_sock, buf, msglen);     // Return value is amount of bytes read, -1 in case of error
+
+                  char message[] = "GET\n";
+                  printf(buf);
+                  for (int i=0; i<=msglen-4; i++){
+                    if (buf[i] == 'G' && buf[i+1] == 'E' && buf[i+2] == 'T' && buf[i+3] == '\n'){
+                      printf("you wrote the right message\n");
+                      // Create message to send
+                      time_t t = time(NULL);
+                      char *msg = ctime(&t);
+                      int msglen = strlen(msg) + 1;
+                      // Write the whole message in one go, fail if this does not work
+                      ret = write(client_sock, msg, msglen);
+                      // Return value is amount of bytes written, -1 in case of error
+                      if (ret != msglen) {
+                              perror("Error during write");
+                              return 1;
+                      }
+                    }
+                  }
                 }
 
-                // Write the whole message in one go, fail if this does not work
-                ret = write(client_sock, msg, msglen);
-                // Return value is amount of bytes written, -1 in case of error
-                if (ret != msglen) {
-                        perror("Error during write");
-                        return 1;
-                }
+
+
 
         }
         /* NOT REACHED */

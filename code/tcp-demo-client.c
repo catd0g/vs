@@ -28,9 +28,9 @@ int main(int argc, char **argv)
         aii.ai_family = PF_UNSPEC;
 
         struct addrinfo *aio;
-        // Get address information. 
+        // Get address information.
         // First parameter is host string, either hostname or numerical IPv4/IPv6 address
-        // Second parameter is port/service string, either as port number 
+        // Second parameter is port/service string, either as port number
         // or well-known identifier, e.g. http
         // So, e.g. getaddrinfo( "www.compeng.uni-frankfurt.de", "http", ... getaddrinfo( "141.2.248.1", "80", ...
         // Third parameter is input address info structure (cf. above)
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         // File descriptor for the socket
         int sock = -1;
         struct addrinfo *iter;
-        // Iterate over linked list of specified output addresses, 
+        // Iterate over linked list of specified output addresses,
         // use first address to which a connection can be established
         for (iter = aio; iter != NULL && sock == -1; iter = iter->ai_next) {
                 // Create socket given the parameters from the found address info.
@@ -75,18 +75,33 @@ int main(int argc, char **argv)
         }
 
 
+        //WRITE MESSAGE TO SERVER
+        int max = 1042;
+        char line[max];
+        char message[] = "GET";
+        fgets(line, max, stdin);
+        int msglen = strlen(line) + 1;
+        int recieved;
+        // Write the whole message in one go, fail if this does not work
+        recieved = write(sock, line, msglen);
+        printf("write message %s\n", line);
+        //printf(recieved);
+        if (recieved != msglen) {
+                perror("Error during write");
+                return 1;
+        }
+
+        // Get message from server
         // Maximum size of incoming message
-        int msglen = 100;
+        int re_msglen = 100;
 
         // Buffer for message
-        char buf[msglen + 1];   // One more to ensure that there is a trailing NULL char.
-        memset(buf, 0, msglen + 1);
-
-        ret = read(sock, buf, msglen);     // Return value is amount of bytes read, -1 in case of error
-        printf("Data read: '%s'\n", buf);
-
+        char re_buf[re_msglen + 1];   // One more to ensure that there is a trailing NULL char.
+        memset(re_buf, 0, re_msglen + 1);
+        ret = read(sock, re_buf, re_msglen);     // Return value is amount of bytes read, -1 in case of error
+        printf("Data read: '%s'\n", re_buf);
         // Clean up after us and close the socket.
+
         close(sock);
         return 0;
 }
-
